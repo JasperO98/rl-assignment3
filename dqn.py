@@ -21,10 +21,13 @@ class DQN:
 
     def __init__(self, game, policy):
         self.env = gym.make(game)
-        self.model = self.build_model()
+        self.model1 = self.build_model()
+        self.model2 = self.build_model()
         self.replay = []
         self.loss = []
-        self.iterations = 0
+        self.iteration = 0
+
+        self.update_target_model()
 
         self.policy = policy
         self.batch_size = 32
@@ -32,10 +35,15 @@ class DQN:
         self.alpha = 0.1
         self.epsilon = np.linspace(1, 0.01, 2000)
         self.budget = 20000
+        self.weight_update_frequency = 20
+
+    def update_target_model(self):
+        self.model2.set_weights(self.model1.get_weights())
 
     def train(self):
         with tqdm(total=self.budget) as progress:
             while True:
+                self.iteration += 1
 
                 # get initial state
                 state_c = self.env.reset()
@@ -44,10 +52,10 @@ class DQN:
                 while not done:
 
                     # select action with epsilon greedy
-                    if npr.random() < self.epsilon[min(self.iterations, len(self.epsilon) - 1)]:
+                    if npr.random() < self.epsilon[min(self.iteration, len(self.epsilon)) - 1]:
                         action = self.env.action_space.sample()
                     else:
-                        action = np.argmax(self.model.predict(state_c.reshape(1, -1))[0])
+                        action = np.argmax(self.model2.predict(state_c.reshape(1, -1))[0])
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
@@ -65,18 +73,21 @@ class DQN:
                     samples_done = np.array([sample['doneN'] for sample in samples])
 
                     # calculate and apply training targets for batch
-                    target = self.model.predict(samples_state_c)
+                    target = self.model1.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.alpha
                     target[range(len(target)), samples_action] += self.alpha * (
-                            samples_reward + self.gamma * np.max(self.model.predict(samples_state_n), axis=1) * ~samples_done
+                            samples_reward + self.gamma * np.max(self.model1.predict(samples_state_n), axis=1) * ~samples_done
                     )
-                    loss = self.model.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+
+                    # apply infrequent weight updates
+                    if self.iteration % self.weight_update_frequency == 0:
+                        self.update_target_model()
 
                     # end iteration
                     self.loss.append(loss)
-                    self.iterations += 1
                     progress.update()
                     progress.desc = 'Loss ' + str(loss)
 
-                    if self.iterations == self.budget:
+                    if self.iteration == self.budget:
                         return
