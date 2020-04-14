@@ -19,13 +19,14 @@ class DQN:
         model.compile(optimizer=Adam(), loss='mse')
         return model
 
-    def __init__(self, game):
+    def __init__(self, game, policy):
         self.env = gym.make(game)
         self.model = self.build_model()
         self.replay = []
         self.loss = []
         self.iterations = 0
 
+        self.policy = policy
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 0.1
@@ -51,6 +52,7 @@ class DQN:
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
                     self.env.render()
+                    reward = self.policy(state_c, action, reward, state_n, done)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
 
