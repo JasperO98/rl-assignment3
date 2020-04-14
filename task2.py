@@ -14,7 +14,7 @@ if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', policy)
     dqn.train()
 
-    sns.lineplot(x=range(dqn.iterations), y=dqn.loss)
+    sns.lineplot(x=range(dqn.iteration), y=dqn.loss)
     plt.show()
 
     states = np.array(list(product(np.linspace(-1.2, 0.6, 100), np.linspace(-0.07, 0.07, 100))))
