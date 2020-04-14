@@ -5,11 +5,7 @@ from keras.optimizers import Adam
 import os
 import numpy as np
 import numpy.random as npr
-import seaborn as sns
-import matplotlib.pyplot as plt
 from tqdm import tqdm
-import pandas as pd
-from itertools import product
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -82,36 +78,3 @@ class DQN:
 
                     if self.iterations == self.budget:
                         return
-
-    def plot_loss(self):
-        sns.lineplot(x=range(self.iterations), y=self.loss)
-        plt.show()
-
-    def plot_choices_car(self):
-        states = np.array(list(product(np.linspace(-1.2, 0.6, 100), np.linspace(-0.07, 0.07, 100))))
-        actions = np.argmax(self.model.predict(states), axis=1)
-
-        df = pd.DataFrame({
-            'Position': states[:, 0], 'Velocity': states[:, 1], 'Action': actions,
-        })
-        df['Action'] = df['Action'].astype('category')
-
-        sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
-        plt.show()
-
-    def play_game(self):
-        state = self.env.reset()
-        self.env.render()
-        done = False
-        while not done:
-            action = np.argmax(self.model.predict(state.reshape(1, -1))[0])
-            state, _, done, _ = self.env.step(action)
-            self.env.render()
-
-
-if __name__ == '__main__':
-    dqn = DQN('CartPole-v1')
-    dqn.train()
-    dqn.plot_loss()
-    # dqn.plot_choices_car()
-    dqn.play_game()
