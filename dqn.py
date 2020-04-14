@@ -17,7 +17,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 class DQN:
     def build_model(self):
         model = Sequential()
-        model.add(Dense(64, input_dim=self.env.observation_space.shape[0], activation='relu'))
+        model.add(Dense(64, input_dim=np.product(self.env.observation_space.shape), activation='relu'))
         model.add(Dense(32, activation='relu'))
         model.add(Dense(self.env.action_space.n, activation='linear'))
         model.compile(optimizer=Adam(), loss='mse')
