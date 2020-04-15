@@ -4,6 +4,18 @@ from itertools import product
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
+
+
+def build_model(env):
+    model = Sequential()
+    model.add(Dense(64, input_shape=env.observation_space.shape, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(env.action_space.n, activation='linear'))
+    model.compile(optimizer=Adam(), loss='mse')
+    return model
 
 
 def policy(state_c, action, reward, state_n, done):
@@ -14,7 +26,7 @@ def policy(state_c, action, reward, state_n, done):
 
 
 if __name__ == '__main__':
-    dqn = DQN('MountainCar-v0', policy)
+    dqn = DQN('MountainCar-v0', policy, build_model)
     dqn.train()
 
     sns.lineplot(x=range(dqn.iteration), y=dqn.final_pos)

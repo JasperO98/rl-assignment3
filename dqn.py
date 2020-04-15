@@ -1,7 +1,4 @@
 import gym
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
 import os
 import numpy as np
 import numpy.random as npr
@@ -12,15 +9,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class DQN:
-    def build_model(self):
-        model = Sequential()
-        model.add(Dense(64, input_shape=self.env.observation_space.shape, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(self.env.action_space.n, activation='linear'))
-        model.compile(optimizer=Adam(), loss='mse')
-        return model
-
-    def __init__(self, game, policy):
+    def __init__(self, game, policy, build_model):
         self.budget = 20000
         self.policy = policy
         self.batch_size = 32
@@ -30,8 +19,8 @@ class DQN:
         self.weight_update_frequency = 1
 
         self.env = gym.make(game)
-        self.model1 = self.build_model()
-        self.model2 = self.build_model()
+        self.model1 = build_model(self.env)
+        self.model2 = build_model(self.env)
         self.replay = deque(maxlen=int(self.budget / 10))
         self.loss = []
         self.iteration = 0
