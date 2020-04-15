@@ -18,7 +18,7 @@ if __name__ == '__main__':
     plt.show()
 
     states = np.array(list(product(np.linspace(-1.2, 0.6, 100), np.linspace(-0.07, 0.07, 100))))
-    actions = np.argmax(dqn.model.predict(states), axis=1)
+    actions = np.argmax(dqn.model1.predict(states), axis=1)
 
     df = pd.DataFrame({
         'Position': states[:, 0], 'Velocity': states[:, 1], 'Action': actions,
