@@ -7,7 +7,7 @@ import numpy as np
 
 
 def policy(state_c, action, reward, state_n, done):
-    return state_n[0] + reward
+    return state_n[0] - 0.5 if reward != 1 else reward
 
 
 if __name__ == '__main__':

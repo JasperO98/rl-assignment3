@@ -36,8 +36,7 @@ class DQN:
         self.alpha = 1  # 0.1
         self.epsilon = np.linspace(1, 0.01, 2000)
         self.budget = 40000
-        self.budget = 20000
-        self.weight_update_frequency = 20
+        self.weight_update_frequency = 1
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
@@ -63,8 +62,6 @@ class DQN:
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
                     sum_rewards += reward
-                    if reward != 1:
-                        reward = state_n[0] - 0.5
 
                     self.env.render()
                     reward = self.policy(state_c, action, reward, state_n, done)
