@@ -50,13 +50,13 @@ class DQN:
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
 
-    def train(self):
+    def train(self, render):
         with tqdm(total=self.settings.budget) as progress:
             while True:
 
                 # get initial state
                 state_c = self.env.reset()
-                self.env.render()
+                self.env.render() if render else None
                 state_c = self.settings.process_state(state_c)
                 state_c = np.tile(state_c, np.append(np.ones(len(self.input_shape) - 1, dtype=int), [self.settings.frames_as_state]))
 
@@ -72,7 +72,7 @@ class DQN:
 
                     # perform action and store results in buffer
                     state_n, reward, done, info = self.env.step(action)
-                    self.env.render()
+                    self.env.render() if render else None
                     state_n = self.settings.process_state(state_n)
                     state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
                     reward = self.settings.policy(state_c, action, reward, state_n, done, info)
