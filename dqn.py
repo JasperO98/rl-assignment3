@@ -7,7 +7,7 @@ import numpy as np
 import numpy.random as npr
 from tqdm import tqdm
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class DQN:
@@ -25,12 +25,13 @@ class DQN:
         self.replay = []
         self.loss = []
         self.iterations = 0
+        self.rewards = []
 
         self.batch_size = 32
         self.gamma = 0.99
-        self.alpha = 0.1
+        self.alpha = 1  # 0.1
         self.epsilon = np.linspace(1, 0.01, 2000)
-        self.budget = 20000
+        self.budget = 40000
 
     def train(self):
         with tqdm(total=self.budget) as progress:
@@ -40,6 +41,7 @@ class DQN:
                 state_c = self.env.reset()
                 self.env.render()
                 done = False
+                sum_rewards = 0
                 while not done:
 
                     # select action with epsilon greedy
@@ -50,6 +52,10 @@ class DQN:
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
+                    sum_rewards += reward
+                    if reward != 1:
+                        reward = state_n[0] - 0.5
+
                     self.env.render()
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
@@ -78,3 +84,6 @@ class DQN:
 
                     if self.iterations == self.budget:
                         return
+
+                # Add when done with game
+                self.rewards.append(sum_rewards)

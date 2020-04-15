@@ -22,3 +22,6 @@ if __name__ == '__main__':
 
     sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
     plt.show()
+
+    plt.plot(dqn.rewards)
+    plt.show()
