@@ -6,8 +6,9 @@ import os
 import numpy as np
 import numpy.random as npr
 from tqdm import tqdm
+from collections import deque
 
-#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class DQN:
@@ -20,22 +21,23 @@ class DQN:
         return model
 
     def __init__(self, game, policy):
-        self.env = gym.make(game)
-        self.model1 = self.build_model()
-        self.model2 = self.build_model()
-        self.replay = []
-        self.loss = []
-        self.iteration = 0
-        self.update_target_model()
-        self.final_pos = []
-
+        self.budget = 20000
         self.policy = policy
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1
-        self.epsilon = np.linspace(1, 0.01, 991)
-        self.budget = 40000
+        self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
         self.weight_update_frequency = 1
+
+        self.env = gym.make(game)
+        self.model1 = self.build_model()
+        self.model2 = self.build_model()
+        self.replay = deque(maxlen=int(self.budget / 10))
+        self.loss = []
+        self.iteration = 0
+        self.final_pos = []
+
+        self.update_target_model()
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
@@ -59,7 +61,6 @@ class DQN:
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
-
                     self.env.render()
                     reward = self.policy(state_c, action, reward, state_n, done)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
@@ -85,7 +86,7 @@ class DQN:
                     if self.iteration % self.weight_update_frequency == 0:
                         self.update_target_model()
 
-                    # end iteration
+                    # end of iteration
                     self.loss.append(loss)
                     progress.update()
                     progress.desc = 'Loss ' + str(loss)
@@ -93,5 +94,5 @@ class DQN:
                     if self.iteration == self.budget:
                         return
 
-                # Add when done with game
+                # end of full game
                 self.final_pos.append(state_n[0])

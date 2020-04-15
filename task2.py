@@ -7,12 +7,18 @@ import numpy as np
 
 
 def policy(state_c, action, reward, state_n, done):
-    return state_n[0] - 0.5 if reward != 1 else reward
+    if reward == -1:
+        return state_n[0] - 0.5
+    else:
+        return 1
 
 
 if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', policy)
     dqn.train()
+
+    sns.lineplot(x=range(dqn.iteration), y=dqn.final_pos)
+    plt.show()
 
     sns.lineplot(x=range(dqn.iteration), y=dqn.loss)
     plt.show()
@@ -26,7 +32,4 @@ if __name__ == '__main__':
     df['Action'] = df['Action'].astype('category')
 
     sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
-    plt.show()
-
-    plt.plot(dqn.final_pos)
     plt.show()
