@@ -42,7 +42,7 @@ class DQN:
         self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
         self.update_target_model()
 
-        self.replay = deque(maxlen=int(settings.budget / 10))
+        self.replay = deque(maxlen=settings.replay_size)
         self.loss = []
         self.reward = []
         self.iteration = 0
