@@ -37,7 +37,7 @@ def build_model(input_shape, action_space):
     return model
 
 
-def policy(state_c, action, reward, state_n, done):
+def policy(state_c, action, reward, state_n, done, info):
     return reward
 
 

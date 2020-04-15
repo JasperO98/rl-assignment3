@@ -18,7 +18,7 @@ def build_model(input_shape, action_space):
     return model
 
 
-def policy(state_c, action, reward, state_n, done):
+def policy(state_c, action, reward, state_n, done, info):
     if reward == -1:
         return state_n[0]
     else:

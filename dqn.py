@@ -53,9 +53,9 @@ class DQN:
                         action = np.argmax(self.model2.predict(np.expand_dims(state_c, axis=0))[0])
 
                     # perform action and store results in buffer
-                    state_n, reward, done, _ = self.env.step(action)
+                    state_n, reward, done, info = self.env.step(action)
                     self.env.render()
-                    reward = self.policy(state_c, action, reward, state_n, done)
+                    reward = self.policy(state_c, action, reward, state_n, done, info)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
 
