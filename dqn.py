@@ -1,11 +1,14 @@
 import gym
-import os
 import numpy as np
 import numpy.random as npr
 from tqdm import tqdm
 from collections import deque
+import tensorflow as tf
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# limit GPU memory usage
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.compat.v1.Session(config=config)
 
 
 class DQN:
