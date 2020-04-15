@@ -25,16 +25,15 @@ class DQN:
         self.model2 = self.build_model()
         self.replay = []
         self.loss = []
-        self.iterations = 0
-        self.rewards = []
         self.iteration = 0
         self.update_target_model()
+        self.final_pos = []
 
         self.policy = policy
         self.batch_size = 32
         self.gamma = 0.99
-        self.alpha = 1  # 0.1
-        self.epsilon = np.linspace(1, 0.01, 2000)
+        self.alpha = 1
+        self.epsilon = np.linspace(1, 0.01, 991)
         self.budget = 40000
         self.weight_update_frequency = 1
 
@@ -50,7 +49,6 @@ class DQN:
                 state_c = self.env.reset()
                 self.env.render()
                 done = False
-                sum_rewards = 0
                 while not done:
 
                     # select action with epsilon greedy
@@ -61,7 +59,6 @@ class DQN:
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
-                    sum_rewards += reward
 
                     self.env.render()
                     reward = self.policy(state_c, action, reward, state_n, done)
@@ -97,4 +94,4 @@ class DQN:
                         return
 
                 # Add when done with game
-                self.rewards.append(sum_rewards)
+                self.final_pos.append(state_n[0])
