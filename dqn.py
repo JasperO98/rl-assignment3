@@ -5,6 +5,8 @@ from tqdm import tqdm
 from collections import deque
 import tensorflow as tf
 from abc import ABC, abstractmethod
+import json
+from os.path import join
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -49,6 +51,14 @@ class DQN:
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
+
+    def save(self, name):
+        self.model1.save(join('output', name + '.h5'))
+
+        with open(join('output', name + '_loss.json'), 'w') as fp:
+            fp.write(json.dumps(self.loss))
+        with open(join('output', name + '_reward.json'), 'w') as fp:
+            fp.write(json.dumps(self.reward))
 
     def train(self, render):
         with tqdm(total=self.settings.budget) as progress:

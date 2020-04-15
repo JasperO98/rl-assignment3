@@ -55,3 +55,4 @@ class SettingsTask3(SettingsDQN):
 if __name__ == '__main__':
     dqn = DQN('Breakout-v0', SettingsTask3())
     dqn.train(True)
+    dqn.save('task3')
