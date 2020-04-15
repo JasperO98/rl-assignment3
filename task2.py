@@ -32,7 +32,7 @@ class SettingsTask2(SettingsDQN):
     @staticmethod
     def policy(state_c, action, reward, state_n, done, info):
         if reward == -1:
-            return state_n[-2]
+            return state_n[-2] - state_c[-2]
         else:
             return 1
 
