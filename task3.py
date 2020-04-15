@@ -38,7 +38,7 @@ def build_model(input_shape, action_space):
 
 
 def policy(state_c, action, reward, state_n, done, info):
-    return reward
+    return reward + info['ale.lives'] * 0.2
 
 
 if __name__ == '__main__':
