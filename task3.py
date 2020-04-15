@@ -3,6 +3,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Flatten
 from keras.optimizers import Adam
 import numpy as np
+import cv2 as cv
 
 
 class SettingsTask3(SettingsDQN):
@@ -19,31 +20,21 @@ class SettingsTask3(SettingsDQN):
     def build_model(input_shape, action_space):
         model = Sequential()
         model.add(Conv2D(
-            filters=32,
+            filters=16,
             kernel_size=8,
-            strides=(4, 4),
-            padding='valid',
+            strides=4,
             activation='relu',
             input_shape=input_shape,
         ))
         model.add(Conv2D(
-            filters=64,
+            filters=32,
             kernel_size=4,
-            strides=(2, 2),
-            padding='valid',
-            activation='relu',
-            input_shape=input_shape,
-        ))
-        model.add(Conv2D(
-            filters=64,
-            kernel_size=3,
-            strides=(1, 1),
-            padding='valid',
+            strides=2,
             activation='relu',
             input_shape=input_shape,
         ))
         model.add(Flatten())
-        model.add(Dense(512, activation='relu'))
+        model.add(Dense(256, activation='relu'))
         model.add(Dense(action_space, activation='linear'))
         model.compile(optimizer=Adam(), loss='mse')
         return model
@@ -51,6 +42,13 @@ class SettingsTask3(SettingsDQN):
     @staticmethod
     def policy(state_c, action, reward, state_n, done, info):
         return reward + info['ale.lives']
+
+    @staticmethod
+    def process_state(state):
+        state = cv.cvtColor(state, cv.COLOR_RGB2GRAY)
+        state = state[32:-17, 8:-8]
+        state = cv.resize(state, (64, 64), interpolation=cv.INTER_AREA)
+        return state[:, :, np.newaxis]
 
 
 if __name__ == '__main__':
