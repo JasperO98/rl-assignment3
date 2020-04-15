@@ -44,6 +44,7 @@ class SettingsTask2(SettingsDQN):
 if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', SettingsTask2())
     dqn.train(True)
+    dqn.save('task2')
 
     sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
     plt.show()
