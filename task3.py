@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class SettingsTask3(SettingsDQN):
     def __init__(self):
-        self.budget = 2000  # 4000000
+        self.budget = 2000000
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1
