@@ -4,8 +4,6 @@ from keras.layers import Dense, Conv2D, Flatten
 from keras.optimizers import Adam
 import numpy as np
 import cv2 as cv
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 
 class SettingsTask3(SettingsDQN):
@@ -57,9 +55,3 @@ class SettingsTask3(SettingsDQN):
 if __name__ == '__main__':
     dqn = DQN('Breakout-v0', SettingsTask3())
     dqn.train()
-
-    sns.lineplot(x=range(len(dqn.reward)), y=dqn.reward)
-    plt.show()
-
-    sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)
-    plt.show()
