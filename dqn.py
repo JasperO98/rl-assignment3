@@ -23,22 +23,29 @@ class SettingsDQN(ABC):
     def policy(state_c, action, reward, state_n, done, info):
         pass
 
+    @staticmethod
+    @abstractmethod
+    def process_state(state):
+        pass
+
 
 class DQN:
     def __init__(self, game, settings):
         self.settings = settings
-
         self.env = gym.make(game)
-        self.channels = self.env.observation_space.shape[-1]
-        self.input_shape = self.env.observation_space.shape[:-1] + (self.channels * settings.frames_as_state,)
+
+        self.input_shape = list(self.settings.process_state(self.env.reset()).shape)
+        self.channels = self.input_shape[-1]
+        self.input_shape[-1] *= self.settings.frames_as_state
+
         self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
         self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
+        self.update_target_model()
+
         self.replay = deque(maxlen=int(settings.budget / 10))
         self.loss = []
         self.reward = []
         self.iteration = 0
-
-        self.update_target_model()
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
@@ -50,6 +57,7 @@ class DQN:
                 # get initial state
                 state_c = self.env.reset()
                 self.env.render()
+                state_c = self.settings.process_state(state_c)
                 state_c = np.tile(state_c, np.append(np.ones(len(self.input_shape) - 1, dtype=int), [self.settings.frames_as_state]))
 
                 done = False
@@ -65,6 +73,7 @@ class DQN:
                     # perform action and store results in buffer
                     state_n, reward, done, info = self.env.step(action)
                     self.env.render()
+                    state_n = self.settings.process_state(state_n)
                     state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
                     reward = self.settings.policy(state_c, action, reward, state_n, done, info)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})

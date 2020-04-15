@@ -35,6 +35,10 @@ class SettingsTask2(SettingsDQN):
         else:
             return 1
 
+    @staticmethod
+    def process_state(state):
+        return state
+
 
 if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', SettingsTask2())
