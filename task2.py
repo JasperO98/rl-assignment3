@@ -7,6 +7,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from os.path import join
 
 
 class SettingsTask2(SettingsDQN):
@@ -47,9 +48,11 @@ if __name__ == '__main__':
     dqn.save('task2')
 
     sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
+    plt.savefig(join('output', 'task2_reward.pdf'))
     plt.show()
 
     sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)
+    plt.savefig(join('output', 'task2_loss.pdf'))
     plt.show()
 
     states = np.array(list(product(np.linspace(-1.2, 0.6, 100), np.linspace(-0.07, 0.07, 100))))
@@ -61,4 +64,5 @@ if __name__ == '__main__':
     df['Action'] = df['Action'].astype('category')
 
     sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
+    plt.savefig(join('output', 'task2_policy.pdf'))
     plt.show()

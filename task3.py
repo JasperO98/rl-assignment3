@@ -6,6 +6,7 @@ import numpy as np
 import cv2 as cv
 import seaborn as sns
 import matplotlib.pyplot as plt
+from os.path import join
 
 
 class SettingsTask3(SettingsDQN):
@@ -59,13 +60,10 @@ if __name__ == '__main__':
     dqn.train(False)
     dqn.save('task3')
 
-    sns.lineplot(x=range(len(np.sum(dqn.reward, axis=0))), y=np.sum(dqn.reward, axis=0))
-    plt.xlabel('Games')
-    plt.ylabel('Sum reward')
-    plt.savefig('output/task3_sum_reward.pdf')
+    sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
+    plt.savefig(join('output', 'task3_reward.pdf'))
     plt.show()
 
     sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)
-
-    plt.savefig('output/task3_sum_loss.pdf')
+    plt.savefig(join('output', 'task3_loss.pdf'))
     plt.show()
