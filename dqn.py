@@ -19,7 +19,7 @@ class DQN:
         self.gamma = 0.99
         self.alpha = 1
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
-        self.weight_update_frequency = 1
+        self.weight_update_frequency = int(self.budget / 100)
 
         self.env = gym.make(game)
         self.model1 = build_model(self.env.observation_space.shape, self.env.action_space.n)
@@ -37,19 +37,20 @@ class DQN:
     def train(self):
         with tqdm(total=self.budget) as progress:
             while True:
-                self.iteration += 1
 
                 # get initial state
                 state_c = self.env.reset()
                 self.env.render()
+
                 done = False
                 while not done:
+                    self.iteration += 1
 
                     # select action with epsilon greedy
                     if npr.random() < self.epsilon[min(self.iteration, len(self.epsilon)) - 1]:
                         action = self.env.action_space.sample()
                     else:
-                        action = np.argmax(self.model2.predict(state_c.reshape(1, -1))[0])
+                        action = np.argmax(self.model2.predict(np.expand_dims(state_c, axis=0))[0])
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)

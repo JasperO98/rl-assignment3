@@ -20,7 +20,7 @@ def build_model(input_shape, action_space):
 
 def policy(state_c, action, reward, state_n, done):
     if reward == -1:
-        return state_n[0] - 0.5
+        return state_n[0]
     else:
         return 1
 
