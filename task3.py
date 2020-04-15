@@ -4,14 +4,13 @@ from keras.layers import Dense, Conv2D, Flatten
 from keras.optimizers import Adam
 import numpy as np
 import cv2 as cv
-import csv
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 
 class SettingsTask3(SettingsDQN):
     def __init__(self):
-        self.budget = 4000000
+        self.budget = 2000000
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1
@@ -59,14 +58,6 @@ if __name__ == '__main__':
     dqn = DQN('Breakout-v0', SettingsTask3())
     dqn.train(False)
     dqn.save('task3')
-
-    with open('output/task3_sum_reward.csv', 'w') as myfile:
-        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-        wr.writerow(list(np.sum(dqn.reward, axis=0)))
-
-    with open('output/task3_sum_loss.csv', 'w') as myfile:
-        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-        wr.writerow(dqn.loss)
 
     sns.lineplot(x=range(len(np.sum(dqn.reward, axis=0))), y=np.sum(dqn.reward, axis=0))
     plt.xlabel('Games')
