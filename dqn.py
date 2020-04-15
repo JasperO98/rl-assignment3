@@ -19,8 +19,8 @@ class DQN:
         self.weight_update_frequency = 1
 
         self.env = gym.make(game)
-        self.model1 = build_model(self.env)
-        self.model2 = build_model(self.env)
+        self.model1 = build_model(self.env.observation_space.shape, self.env.action_space.n)
+        self.model2 = build_model(self.env.observation_space.shape, self.env.action_space.n)
         self.replay = deque(maxlen=int(self.budget / 10))
         self.loss = []
         self.iteration = 0

@@ -9,11 +9,11 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 
 
-def build_model(env):
+def build_model(input_shape, action_space):
     model = Sequential()
-    model.add(Dense(64, input_shape=env.observation_space.shape, activation='relu'))
+    model.add(Dense(64, input_shape=input_shape, activation='relu'))
     model.add(Dense(32, activation='relu'))
-    model.add(Dense(env.action_space.n, activation='linear'))
+    model.add(Dense(action_space, activation='linear'))
     model.compile(optimizer=Adam(), loss='mse')
     return model
 
