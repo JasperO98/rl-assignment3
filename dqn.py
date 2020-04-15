@@ -20,10 +20,13 @@ class DQN:
         self.alpha = 1
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
         self.weight_update_frequency = int(self.budget / 100)
+        self.frames_as_state = 4
 
         self.env = gym.make(game)
-        self.model1 = build_model(self.env.observation_space.shape, self.env.action_space.n)
-        self.model2 = build_model(self.env.observation_space.shape, self.env.action_space.n)
+        self.channels = self.env.observation_space.shape[-1]
+        self.input_shape = self.env.observation_space.shape[:-1] + (self.channels * self.frames_as_state,)
+        self.model1 = build_model(self.input_shape, self.env.action_space.n)
+        self.model2 = build_model(self.input_shape, self.env.action_space.n)
         self.replay = deque(maxlen=int(self.budget / 10))
         self.loss = []
         self.reward = []
@@ -41,6 +44,7 @@ class DQN:
                 # get initial state
                 state_c = self.env.reset()
                 self.env.render()
+                state_c = np.tile(state_c, np.append(np.ones(len(self.input_shape) - 1, dtype=int), [self.frames_as_state]))
 
                 done = False
                 while not done:
@@ -55,6 +59,7 @@ class DQN:
                     # perform action and store results in buffer
                     state_n, reward, done, info = self.env.step(action)
                     self.env.render()
+                    state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
                     reward = self.policy(state_c, action, reward, state_n, done, info)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
