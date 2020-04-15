@@ -13,29 +13,39 @@ from tqdm import tqdm
 class DQN:
     def build_model(self):
         model = Sequential()
-        model.add(Dense(64, input_dim=np.product(self.env.observation_space.shape), activation='relu'))
+        model.add(Dense(64, input_shape=self.env.observation_space.shape, activation='relu'))
         model.add(Dense(32, activation='relu'))
         model.add(Dense(self.env.action_space.n, activation='linear'))
         model.compile(optimizer=Adam(), loss='mse')
         return model
 
-    def __init__(self, game):
+    def __init__(self, game, policy):
         self.env = gym.make(game)
-        self.model = self.build_model()
+        self.model1 = self.build_model()
+        self.model2 = self.build_model()
         self.replay = []
         self.loss = []
         self.iterations = 0
         self.rewards = []
+        self.iteration = 0
+        self.update_target_model()
 
+        self.policy = policy
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1  # 0.1
         self.epsilon = np.linspace(1, 0.01, 2000)
         self.budget = 40000
+        self.budget = 20000
+        self.weight_update_frequency = 20
+
+    def update_target_model(self):
+        self.model2.set_weights(self.model1.get_weights())
 
     def train(self):
         with tqdm(total=self.budget) as progress:
             while True:
+                self.iteration += 1
 
                 # get initial state
                 state_c = self.env.reset()
@@ -45,10 +55,10 @@ class DQN:
                 while not done:
 
                     # select action with epsilon greedy
-                    if npr.random() < self.epsilon[min(self.iterations, len(self.epsilon) - 1)]:
+                    if npr.random() < self.epsilon[min(self.iteration, len(self.epsilon)) - 1]:
                         action = self.env.action_space.sample()
                     else:
-                        action = np.argmax(self.model.predict(state_c.reshape(1, -1))[0])
+                        action = np.argmax(self.model2.predict(state_c.reshape(1, -1))[0])
 
                     # perform action and store results in buffer
                     state_n, reward, done, _ = self.env.step(action)
@@ -57,6 +67,7 @@ class DQN:
                         reward = state_n[0] - 0.5
 
                     self.env.render()
+                    reward = self.policy(state_c, action, reward, state_n, done)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
 
@@ -69,20 +80,23 @@ class DQN:
                     samples_done = np.array([sample['doneN'] for sample in samples])
 
                     # calculate and apply training targets for batch
-                    target = self.model.predict(samples_state_c)
+                    target = self.model1.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.alpha
                     target[range(len(target)), samples_action] += self.alpha * (
-                            samples_reward + self.gamma * np.max(self.model.predict(samples_state_n), axis=1) * ~samples_done
+                            samples_reward + self.gamma * np.max(self.model1.predict(samples_state_n), axis=1) * ~samples_done
                     )
-                    loss = self.model.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+
+                    # apply infrequent weight updates
+                    if self.iteration % self.weight_update_frequency == 0:
+                        self.update_target_model()
 
                     # end iteration
                     self.loss.append(loss)
-                    self.iterations += 1
                     progress.update()
                     progress.desc = 'Loss ' + str(loss)
 
-                    if self.iterations == self.budget:
+                    if self.iteration == self.budget:
                         return
 
                 # Add when done with game
