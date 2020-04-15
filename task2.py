@@ -29,7 +29,7 @@ if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', policy, build_model)
     dqn.train()
 
-    sns.lineplot(x=range(len(dqn.final_pos)), y=dqn.final_pos)
+    sns.lineplot(x=range(len(dqn.reward)), y=dqn.reward)
     plt.show()
 
     sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)

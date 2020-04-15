@@ -26,8 +26,8 @@ class DQN:
         self.model2 = build_model(self.env.observation_space.shape, self.env.action_space.n)
         self.replay = deque(maxlen=int(self.budget / 10))
         self.loss = []
+        self.reward = []
         self.iteration = 0
-        self.final_pos = []
 
         self.update_target_model()
 
@@ -71,7 +71,7 @@ class DQN:
                     target = self.model1.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.alpha
                     target[range(len(target)), samples_action] += self.alpha * (
-                            samples_reward + self.gamma * np.max(self.model1.predict(samples_state_n), axis=1) * ~samples_done
+                            samples_reward + self.gamma * np.max(self.model2.predict(samples_state_n), axis=1) * ~samples_done
                     )
                     loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
 
@@ -88,4 +88,4 @@ class DQN:
                         return
 
                 # end of full game
-                self.final_pos.append(state_n[0])
+                self.reward.append(reward)
