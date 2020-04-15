@@ -32,7 +32,7 @@ def build_model(input_shape, action_space):
     ))
     model.add(Flatten())
     model.add(Dense(512, activation='relu'))
-    model.add(Dense(action_space))
+    model.add(Dense(action_space, activation='linear'))
     model.compile(optimizer=Adam(), loss='mse')
     return model
 

@@ -11,8 +11,8 @@ from keras.optimizers import Adam
 
 def build_model(input_shape, action_space):
     model = Sequential()
-    model.add(Dense(64, input_shape=input_shape, activation='relu'))
-    model.add(Dense(32, activation='relu'))
+    model.add(Dense(16, input_shape=input_shape, activation='relu'))
+    model.add(Dense(16, activation='relu'))
     model.add(Dense(action_space, activation='linear'))
     model.compile(optimizer=Adam(), loss='mse')
     return model
@@ -20,7 +20,7 @@ def build_model(input_shape, action_space):
 
 def policy(state_c, action, reward, state_n, done, info):
     if reward == -1:
-        return state_n[0]
+        return state_n[-2]
     else:
         return 1
 
