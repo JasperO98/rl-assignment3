@@ -45,7 +45,7 @@ if __name__ == '__main__':
     dqn = DQN('MountainCar-v0', SettingsTask2())
     dqn.train(True)
 
-    sns.lineplot(x=range(len(dqn.reward)), y=dqn.reward)
+    sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
     plt.show()
 
     sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)

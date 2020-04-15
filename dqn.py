@@ -53,6 +53,7 @@ class DQN:
     def train(self, render):
         with tqdm(total=self.settings.budget) as progress:
             while True:
+                self.reward.append([])
 
                 # get initial state
                 state_c = self.env.reset()
@@ -101,11 +102,10 @@ class DQN:
 
                     # end of iteration
                     self.loss.append(loss)
+                    self.reward[-1].append(reward)
                     progress.update()
                     progress.desc = 'Loss ' + str(loss)
 
                     if self.iteration == self.settings.budget:
+                        self.reward.pop()
                         return
-
-                # end of full game
-                self.reward.append(reward)
