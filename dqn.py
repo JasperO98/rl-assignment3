@@ -53,12 +53,12 @@ class DQN:
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
 
-    def save(self, name):
-        self.model1.save(join('output', name + '.h5'))
+    def save(self):
+        self.model1.save(join('output', self.name + '_' + str(self.iteration) + '.h5'))
 
-        with open(join('output', name + '_loss.json'), 'w') as fp:
+        with open(join('output', self.name + '_loss.json'), 'w') as fp:
             fp.write(json.dumps(self.loss))
-        with open(join('output', name + '_reward.json'), 'w') as fp:
+        with open(join('output', self.name + '_reward.json'), 'w') as fp:
             fp.write(json.dumps(self.reward))
 
     def train(self, render):
@@ -119,4 +119,6 @@ class DQN:
 
                     if self.iteration == self.settings.budget:
                         self.reward.pop()
+                        self.save()
                         return
+                self.save()
