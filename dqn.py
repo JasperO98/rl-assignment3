@@ -32,7 +32,8 @@ class SettingsDQN(ABC):
 
 
 class DQN:
-    def __init__(self, game, settings):
+    def __init__(self, game, name, settings):
+        self.name = name
         self.settings = settings
         self.env = gym.make(game)
 
