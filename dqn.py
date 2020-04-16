@@ -106,13 +106,13 @@ class DQN:
                             samples_reward + self.settings.gamma * np.max(self.model2.predict(samples_state_n), axis=1) * ~samples_done
                     )
                     loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    self.loss.append(loss)
 
                     # apply infrequent weight updates
                     if self.iteration % self.settings.weight_update_frequency == 0:
                         self.update_target_model()
 
-                    # end of iteration
-                    self.loss.append(loss)
+                    # end iteration
                     progress.update()
                     progress.desc = 'Loss ' + str(loss)
 
