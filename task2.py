@@ -47,7 +47,7 @@ if __name__ == '__main__':
     dqn.train(False)
     dqn.save('task2')
 
-    sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
+    sns.lineplot(x=range(len(dqn.reward)), y=[sum(x) for x in dqn.reward])
     plt.savefig(join('output', 'task2_reward.pdf'))
     plt.show()
 
