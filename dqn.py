@@ -7,6 +7,10 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 import json
 from os.path import join
+from glob import glob
+from natsort import natsorted
+from keras.models import load_model
+import pickle
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -41,14 +45,31 @@ class DQN:
         self.channels = self.input_shape[-1]
         self.input_shape[-1] *= self.settings.frames_as_state
 
-        self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
-        self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
-        self.update_target_model()
-
         self.replay = deque(maxlen=settings.replay_size)
         self.loss = []
         self.reward = []
         self.iteration = 0
+
+        models = natsorted(glob(join('output', name + '_*.h5')))
+
+        if len(models) > 0:
+            self.model1 = load_model(models[-1])
+            self.model2 = load_model(models[-1])
+            self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
+
+            with open(join('output', name + '_replay.pkl'), 'rb') as fp:
+                self.replay = pickle.load(fp)
+            with open(join('output', name + '_loss.json'), 'r') as fp:
+                self.loss = json.load(fp)
+            with open(join('output', name + '_reward.json'), 'r') as fp:
+                self.reward = json.load(fp)
+
+        else:
+            self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.update_target_model()
+
+        self.settings.budget += self.iteration
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
@@ -56,13 +77,15 @@ class DQN:
     def save(self):
         self.model1.save(join('output', self.name + '_' + str(self.iteration) + '.h5'))
 
+        with open(join('output', self.name + '_replay.pkl'), 'wb') as fp:
+            pickle.dump(self.replay, fp)
         with open(join('output', self.name + '_loss.json'), 'w') as fp:
             json.dump(self.loss, fp)
         with open(join('output', self.name + '_reward.json'), 'w') as fp:
             json.dump(self.reward, fp)
 
     def train(self, render):
-        with tqdm(total=self.settings.budget - self.iteration) as progress:
+        with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:
             while True:
                 self.reward.append([])
 
@@ -115,7 +138,8 @@ class DQN:
 
                     # end iteration
                     progress.update()
-                    progress.desc = 'Loss ' + str(loss)
+                    if len(self.reward) >= 2:
+                        progress.desc = 'Prev. Cum. Reward = ' + str(round(sum(self.reward[-2]), 3)) + ', Loss = ' + str(round(loss, 3))
 
                     if self.iteration == self.settings.budget:
                         self.reward.pop()
