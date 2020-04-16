@@ -57,12 +57,12 @@ class DQN:
         self.model1.save(join('output', self.name + '_' + str(self.iteration) + '.h5'))
 
         with open(join('output', self.name + '_loss.json'), 'w') as fp:
-            fp.write(json.dumps(self.loss))
+            json.dump(self.loss, fp)
         with open(join('output', self.name + '_reward.json'), 'w') as fp:
-            fp.write(json.dumps(self.reward))
+            json.dump(self.reward, fp)
 
     def train(self, render):
-        with tqdm(total=self.settings.budget) as progress:
+        with tqdm(total=self.settings.budget - self.iteration) as progress:
             while True:
                 self.reward.append([])
 
