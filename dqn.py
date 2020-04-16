@@ -45,17 +45,11 @@ class DQN:
         self.channels = self.input_shape[-1]
         self.input_shape[-1] *= self.settings.frames_as_state
 
-        self.replay = deque(maxlen=settings.replay_size)
-        self.loss = []
-        self.reward = []
-        self.iteration = 0
-
-        models = natsorted(glob(join('output', name + '_*.h5')))
+        models = natsorted(glob(join('output', name + '_model1_*.h5')))
 
         if len(models) > 0:
             self.model1 = load_model(models[-1])
-            self.model2 = load_model(models[-1])
-            self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
+            self.model2 = load_model(join('output', name + '_model2.h5'))
 
             with open(join('output', name + '_replay.pkl'), 'rb') as fp:
                 self.replay = pickle.load(fp)
@@ -63,11 +57,17 @@ class DQN:
                 self.loss = json.load(fp)
             with open(join('output', name + '_reward.json'), 'r') as fp:
                 self.reward = json.load(fp)
+            self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
 
         else:
             self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
             self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
             self.update_target_model()
+
+            self.replay = deque(maxlen=settings.replay_size)
+            self.loss = []
+            self.reward = []
+            self.iteration = 0
 
         self.settings.budget += self.iteration
 
@@ -75,7 +75,8 @@ class DQN:
         self.model2.set_weights(self.model1.get_weights())
 
     def save(self):
-        self.model1.save(join('output', self.name + '_' + str(self.iteration) + '.h5'))
+        self.model1.save(join('output', self.name + '_model1_' + str(self.iteration) + '.h5'))
+        self.model2.save(join('output', self.name + '_model2.h5'))
 
         with open(join('output', self.name + '_replay.pkl'), 'wb') as fp:
             pickle.dump(self.replay, fp)
@@ -139,7 +140,7 @@ class DQN:
                     # end iteration
                     progress.update()
                     if len(self.reward) >= 2:
-                        progress.desc = 'Prev. Cum. Reward = ' + str(round(sum(self.reward[-2]), 3)) + ', Loss = ' + str(round(loss, 3))
+                        progress.desc = 'Prev. Cum. Reward = ' + str(round(sum(self.reward[-2]), 4)) + ', Loss = ' + str(round(loss, 4))
 
                     if self.iteration == self.settings.budget:
                         self.reward.pop()
