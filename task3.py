@@ -11,7 +11,7 @@ from os.path import join
 
 class SettingsTask3(SettingsDQN):
     def __init__(self):
-        self.budget = 2000000
+        self.budget = 1000000
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1
