@@ -69,8 +69,6 @@ class DQN:
             self.reward = []
             self.iteration = 0
 
-        self.settings.budget += self.iteration
-
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
 
