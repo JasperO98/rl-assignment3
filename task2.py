@@ -32,10 +32,7 @@ class SettingsTask2(SettingsDQN):
 
     @staticmethod
     def policy(state_c, action, reward, state_n, done, info):
-        if reward == -1:
-            return state_n[-2] - state_c[-2]
-        else:
-            return 1
+        return reward
 
     @staticmethod
     def process_state(state):
@@ -43,11 +40,10 @@ class SettingsTask2(SettingsDQN):
 
 
 if __name__ == '__main__':
-    dqn = DQN('MountainCar-v0', SettingsTask2())
+    dqn = DQN('MountainCar-v0', 'task2', SettingsTask2())
     dqn.train(False)
-    dqn.save('task2')
 
-    sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
+    sns.lineplot(x=range(len(dqn.reward)), y=[sum(x) for x in dqn.reward])
     plt.savefig(join('output', 'task2_reward.pdf'))
     plt.show()
 

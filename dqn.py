@@ -7,6 +7,10 @@ import tensorflow as tf
 from abc import ABC, abstractmethod
 import json
 from os.path import join
+from glob import glob
+from natsort import natsorted
+from keras.models import load_model
+import pickle
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -32,7 +36,8 @@ class SettingsDQN(ABC):
 
 
 class DQN:
-    def __init__(self, game, settings):
+    def __init__(self, game, name, settings):
+        self.name = name
         self.settings = settings
         self.env = gym.make(game)
 
@@ -40,28 +45,48 @@ class DQN:
         self.channels = self.input_shape[-1]
         self.input_shape[-1] *= self.settings.frames_as_state
 
-        self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
-        self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
-        self.update_target_model()
+        models = natsorted(glob(join('output', name + '_model1_*.h5')))
 
-        self.replay = deque(maxlen=settings.replay_size)
-        self.loss = []
-        self.reward = []
-        self.iteration = 0
+        if len(models) > 0:
+            self.model1 = load_model(models[-1])
+            self.model2 = load_model(join('output', name + '_model2.h5'))
+
+            with open(join('output', name + '_replay.pkl'), 'rb') as fp:
+                self.replay = pickle.load(fp)
+            with open(join('output', name + '_loss.json'), 'r') as fp:
+                self.loss = json.load(fp)
+            with open(join('output', name + '_reward.json'), 'r') as fp:
+                self.reward = json.load(fp)
+            self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
+
+        else:
+            self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.update_target_model()
+
+            self.replay = deque(maxlen=settings.replay_size)
+            self.loss = []
+            self.reward = []
+            self.iteration = 0
+
+        self.settings.budget += self.iteration
 
     def update_target_model(self):
         self.model2.set_weights(self.model1.get_weights())
 
-    def save(self, name):
-        self.model1.save(join('output', name + '.h5'))
+    def save(self):
+        self.model1.save(join('output', self.name + '_model1_' + str(self.iteration) + '.h5'))
+        self.model2.save(join('output', self.name + '_model2.h5'))
 
-        with open(join('output', name + '_loss.json'), 'w') as fp:
-            fp.write(json.dumps(self.loss))
-        with open(join('output', name + '_reward.json'), 'w') as fp:
-            fp.write(json.dumps(self.reward))
+        with open(join('output', self.name + '_replay.pkl'), 'wb') as fp:
+            pickle.dump(self.replay, fp)
+        with open(join('output', self.name + '_loss.json'), 'w') as fp:
+            json.dump(self.loss, fp)
+        with open(join('output', self.name + '_reward.json'), 'w') as fp:
+            json.dump(self.reward, fp)
 
     def train(self, render):
-        with tqdm(total=self.settings.budget) as progress:
+        with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:
             while True:
                 self.reward.append([])
 
@@ -106,16 +131,19 @@ class DQN:
                             samples_reward + self.settings.gamma * np.max(self.model2.predict(samples_state_n), axis=1) * ~samples_done
                     )
                     loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    self.loss.append(loss)
 
                     # apply infrequent weight updates
                     if self.iteration % self.settings.weight_update_frequency == 0:
                         self.update_target_model()
 
-                    # end of iteration
-                    self.loss.append(loss)
+                    # end iteration
                     progress.update()
-                    progress.desc = 'Loss ' + str(loss)
+                    if len(self.reward) >= 2:
+                        progress.desc = 'Prev. Cum. Reward = ' + str(round(sum(self.reward[-2]), 4)) + ', Loss = ' + str(round(loss, 4))
 
                     if self.iteration == self.settings.budget:
                         self.reward.pop()
+                        self.save()
                         return
+                self.save()

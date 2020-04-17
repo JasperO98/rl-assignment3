@@ -11,7 +11,7 @@ from os.path import join
 
 class SettingsTask3(SettingsDQN):
     def __init__(self):
-        self.budget = 2000000
+        self.budget = 1000000
         self.batch_size = 32
         self.gamma = 0.99
         self.alpha = 1
@@ -56,11 +56,10 @@ class SettingsTask3(SettingsDQN):
 
 
 if __name__ == '__main__':
-    dqn = DQN('Breakout-v0', SettingsTask3())
+    dqn = DQN('Breakout-v0', 'task3', SettingsTask3())
     dqn.train(False)
-    dqn.save('task3')
 
-    sns.lineplot(x=range(len(dqn.reward)), y=np.sum(dqn.reward, axis=1))
+    sns.lineplot(x=range(len(dqn.reward)), y=[sum(x) for x in dqn.reward])
     plt.savefig(join('output', 'task3_reward.pdf'))
     plt.show()
 
