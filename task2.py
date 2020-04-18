@@ -35,8 +35,9 @@ class SettingsTask2(SettingsDQN):
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info):
-        return state_n[-2] - state_c[-2]
+    def policy(state_c, action, reward, state_n, done, info1, info2):
+        info2['best'] = max(info2.get('best', -np.inf), state_c[-2])
+        return max(0, state_n[-2] - info2['best'])
 
     @staticmethod
     def process_state(state):
