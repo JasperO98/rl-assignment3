@@ -24,15 +24,19 @@ class SettingsTask2(SettingsDQN):
     @staticmethod
     def build_model(input_shape, action_space):
         model = Sequential()
-        model.add(Dense(16, input_shape=input_shape, activation='relu'))
-        model.add(Dense(16, activation='relu'))
-        model.add(Dense(action_space, activation='linear'))
+
+        model.add(Dense(
+            units=action_space,
+            input_shape=input_shape,
+            activation='linear',
+        ))
+
         model.compile(optimizer=Adam(), loss='mse')
         return model
 
     @staticmethod
     def policy(state_c, action, reward, state_n, done, info):
-        return reward
+        return state_n[-2] - state_c[-2]
 
     @staticmethod
     def process_state(state):

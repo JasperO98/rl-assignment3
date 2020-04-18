@@ -23,6 +23,7 @@ class SettingsTask3(SettingsDQN):
     @staticmethod
     def build_model(input_shape, action_space):
         model = Sequential()
+
         model.add(Conv2D(
             filters=16,
             kernel_size=8,
@@ -38,8 +39,9 @@ class SettingsTask3(SettingsDQN):
             input_shape=input_shape,
         ))
         model.add(Flatten())
-        model.add(Dense(256, activation='relu'))
-        model.add(Dense(action_space, activation='linear'))
+        model.add(Dense(units=256, activation='relu'))
+        model.add(Dense(units=action_space, activation='linear'))
+
         model.compile(optimizer=Adam(), loss='mse')
         return model
 

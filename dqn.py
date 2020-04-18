@@ -109,8 +109,8 @@ class DQN:
                     self.env.render() if render else None
                     state_n = self.settings.process_state(state_n)
                     state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
-                    self.reward[-1].append(reward)
                     reward = self.settings.policy(state_c, action, reward, state_n, done, info)
+                    self.reward[-1].append(reward)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n
 
