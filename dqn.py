@@ -85,6 +85,8 @@ class DQN:
 
     def train(self, render):
         with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:
+            if self.iteration == self.settings.budget:
+                return
             while True:
                 self.reward.append([])
                 persistent = {}
