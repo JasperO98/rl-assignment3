@@ -14,7 +14,7 @@ class SettingsTask3(SettingsDQN):
         self.budget = 1000000
         self.batch_size = 32
         self.gamma = 0.99
-        self.alpha = 1
+        self.alpha = 0.99
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
         self.weight_update_frequency = int(self.budget / 100)
         self.frames_as_state = 4
@@ -23,6 +23,7 @@ class SettingsTask3(SettingsDQN):
     @staticmethod
     def build_model(input_shape, action_space):
         model = Sequential()
+
         model.add(Conv2D(
             filters=16,
             kernel_size=8,
@@ -38,13 +39,14 @@ class SettingsTask3(SettingsDQN):
             input_shape=input_shape,
         ))
         model.add(Flatten())
-        model.add(Dense(256, activation='relu'))
-        model.add(Dense(action_space, activation='linear'))
+        model.add(Dense(units=256, activation='relu'))
+        model.add(Dense(units=action_space, activation='linear'))
+
         model.compile(optimizer=Adam(), loss='mse')
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info):
+    def policy(state_c, action, reward, state_n, done, info1, info2):
         return reward
 
     @staticmethod
