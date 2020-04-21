@@ -48,8 +48,8 @@ class DQN:
         models = natsorted(glob(join('output', name + '_model1_*.h5')))
 
         if len(models) > 0:
-            self.model1 = load_model(models[-1])
-            self.model2 = load_model(join('output', name + '_model2.h5'))
+            self.online = load_model(models[-1])
+            self.target = load_model(join('output', name + '_model2.h5'))
 
             with open(join('output', name + '_replay.pkl'), 'rb') as fp:
                 self.replay = pickle.load(fp)
@@ -60,8 +60,8 @@ class DQN:
             self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
 
         else:
-            self.model1 = settings.build_model(self.input_shape, self.env.action_space.n)
-            self.model2 = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.online = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.target = settings.build_model(self.input_shape, self.env.action_space.n)
             self.update_target_model()
 
             self.replay = deque(maxlen=settings.replay_size)
@@ -70,11 +70,11 @@ class DQN:
             self.iteration = 0
 
     def update_target_model(self):
-        self.model2.set_weights(self.model1.get_weights())
+        self.target.set_weights(self.online.get_weights())
 
     def save(self):
-        self.model1.save(join('output', self.name + '_model1_' + str(self.iteration) + '.h5'))
-        self.model2.save(join('output', self.name + '_model2.h5'))
+        self.online.save(join('output', self.name + '_model1_' + str(self.iteration) + '.h5'))
+        self.target.save(join('output', self.name + '_model2.h5'))
 
         with open(join('output', self.name + '_replay.pkl'), 'wb') as fp:
             pickle.dump(self.replay, fp)
@@ -103,7 +103,7 @@ class DQN:
                     if npr.random() < self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]:
                         action = self.env.action_space.sample()
                     else:
-                        action = np.argmax(self.model1.predict(np.expand_dims(state_c, axis=0))[0])
+                        action = np.argmax(self.online.predict(np.expand_dims(state_c, axis=0))[0])
 
                     # perform action and store results in buffer
                     state_n, reward, done, info = self.env.step(action)
@@ -124,12 +124,12 @@ class DQN:
                     samples_done = np.array([sample['doneN'] for sample in samples])
 
                     # calculate and apply training targets for batch
-                    target = self.model1.predict(samples_state_c)
+                    target = self.online.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.settings.alpha
                     target[range(len(target)), samples_action] += self.settings.alpha * (
-                            samples_reward + self.settings.gamma * np.max(self.model2.predict(samples_state_n), axis=1) * ~samples_done
+                            samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * ~samples_done
                     )
-                    loss = self.model1.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    loss = self.online.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
                     self.loss.append(loss)
 
                     # apply infrequent weight updates
