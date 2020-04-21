@@ -103,7 +103,7 @@ class DQN:
                     if npr.random() < self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]:
                         action = self.env.action_space.sample()
                     else:
-                        action = np.argmax(self.model1.predict(np.expand_dims(state_c, axis=0))[0])
+                        action = np.argmax(self.model2.predict(np.expand_dims(state_c, axis=0))[0])
 
                     # perform action and store results in buffer
                     state_n, reward, done, info = self.env.step(action)
