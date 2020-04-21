@@ -15,7 +15,7 @@ class SettingsTask2(SettingsDQN):
         self.budget = 20000
         self.batch_size = 32
         self.gamma = 0.99
-        self.alpha = 0.99
+        self.alpha = 1
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
         self.weight_update_frequency = int(self.budget / 100)
         self.frames_as_state = 1
@@ -24,20 +24,15 @@ class SettingsTask2(SettingsDQN):
     @staticmethod
     def build_model(input_shape, action_space):
         model = Sequential()
-
-        model.add(Dense(
-            units=action_space,
-            input_shape=input_shape,
-            activation='linear',
-        ))
-
+        model.add(Dense(16, input_shape=input_shape, activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(action_space, activation='linear'))
         model.compile(optimizer=Adam(), loss='mse')
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info1, info2):
-        info2['best'] = max(info2.get('best', -np.inf), state_c[-2])
-        return max(0, state_n[-2] - info2['best'])
+    def policy(state_c, action, reward, state_n, done, info):
+        return reward
 
     @staticmethod
     def process_state(state):
