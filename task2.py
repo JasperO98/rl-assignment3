@@ -25,11 +25,10 @@ class SettingsTask2(SettingsDQN):
     def build_model(input_shape, action_space):
         model = Sequential()
 
-        model.add(Dense(
-            units=action_space,
-            input_shape=input_shape,
-            activation='linear',
-        ))
+        if len(input_shape) > 1:
+            model.add(Flatten())
+        model.add(Dense(units=64, activation='relu'))
+        model.add(Dense(units=action_space, activation='linear'))
 
         model.compile(optimizer=Adam(), loss='mse')
         return model
