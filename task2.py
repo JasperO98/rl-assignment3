@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten, InputLayer
 from keras.optimizers import Adam
 from os.path import join
 
@@ -25,6 +25,7 @@ class SettingsTask2(SettingsDQN):
     def build_model(input_shape, action_space):
         model = Sequential()
 
+        model.add(InputLayer(input_shape=input_shape))
         if len(input_shape) > 1:
             model.add(Flatten())
         model.add(Dense(units=64, activation='relu'))
