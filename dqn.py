@@ -147,7 +147,9 @@ class DQN:
                     target[range(len(target)), samples_action] += self.settings.alpha * (
                             samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * ~samples_done
                     )
-                    loss = self.online.fit(samples_state_c, target, epochs=1, verbose=0).history['loss'][0]
+                    loss = self.online.fit(
+                        x=samples_state_c, y=target, batch_size=self.settings.batch_size, epochs=1, verbose=0,
+                    ).history['loss'][0]
                     self.loss.append(loss)
 
                     # apply infrequent weight updates
