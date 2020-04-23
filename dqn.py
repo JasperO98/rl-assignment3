@@ -11,6 +11,7 @@ from glob import glob
 from natsort import natsorted
 from keras.models import load_model
 import pickle
+from os import makedirs
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -45,17 +46,17 @@ class DQN:
         self.channels = self.input_shape[-1]
         self.input_shape[-1] *= self.settings.frames_as_state
 
-        models = natsorted(glob(join('output', name + '_model1_*.h5')))
+        models = natsorted(glob(join('output', name, 'model1_*.h5')))
 
         if len(models) > 0:
             self.online = load_model(models[-1])
-            self.target = load_model(join('output', name + '_model2.h5'))
+            self.target = load_model(join('output', name, 'model2.h5'))
 
-            with open(join('output', name + '_replay.pkl'), 'rb') as fp:
+            with open(join('output', name, 'replay.pkl'), 'rb') as fp:
                 self.replay = pickle.load(fp)
-            with open(join('output', name + '_loss.json'), 'r') as fp:
+            with open(join('output', name, 'loss.json'), 'r') as fp:
                 self.loss = json.load(fp)
-            with open(join('output', name + '_reward.json'), 'r') as fp:
+            with open(join('output', name, 'reward.json'), 'r') as fp:
                 self.reward = json.load(fp)
             self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
 
@@ -73,14 +74,16 @@ class DQN:
         self.target.set_weights(self.online.get_weights())
 
     def save(self):
-        self.online.save(join('output', self.name + '_model1_' + str(self.iteration) + '.h5'))
-        self.target.save(join('output', self.name + '_model2.h5'))
+        makedirs(join('output', self.name), exist_ok=True)
 
-        with open(join('output', self.name + '_replay.pkl'), 'wb') as fp:
+        self.online.save(join('output', self.name, 'model1_' + str(self.iteration) + '.h5'))
+        self.target.save(join('output', self.name, 'model2.h5'))
+
+        with open(join('output', self.name, 'replay.pkl'), 'wb') as fp:
             pickle.dump(self.replay, fp)
-        with open(join('output', self.name + '_loss.json'), 'w') as fp:
+        with open(join('output', self.name, 'loss.json'), 'w') as fp:
             json.dump(self.loss, fp)
-        with open(join('output', self.name + '_reward.json'), 'w') as fp:
+        with open(join('output', self.name, 'reward.json'), 'w') as fp:
             json.dump(self.reward, fp)
 
     def train(self, render):
