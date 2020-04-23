@@ -12,6 +12,8 @@ from natsort import natsorted
 from keras.models import load_model
 import pickle
 from os import makedirs
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -85,6 +87,17 @@ class DQN:
             json.dump(self.loss, fp)
         with open(join('output', self.name, 'reward.json'), 'w') as fp:
             json.dump(self.reward, fp)
+
+    def plots(self, reduce):
+        makedirs(join('output', self.name), exist_ok=True)
+
+        sns.lineplot(x=range(len(self.reward)), y=[reduce(x) for x in self.reward])
+        plt.savefig(join('output', self.name, 'reward.pdf'))
+        plt.show()
+
+        sns.lineplot(x=range(len(self.loss)), y=self.loss)
+        plt.savefig(join('output', self.name, 'loss.pdf'))
+        plt.show()
 
     def train(self, render):
         with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:

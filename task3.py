@@ -4,9 +4,6 @@ from keras.layers import Dense, Conv2D, Flatten
 from keras.optimizers import Adam
 import numpy as np
 import cv2 as cv
-import seaborn as sns
-import matplotlib.pyplot as plt
-from os.path import join
 
 
 class SettingsTask3(SettingsDQN):
@@ -60,12 +57,4 @@ class SettingsTask3(SettingsDQN):
 if __name__ == '__main__':
     dqn = DQN('Breakout-v0', 'task3', SettingsTask3())
     dqn.train(False)
-
-    sns.lineplot(x=range(len(dqn.reward)), y=[sum(x) for x in dqn.reward])
-    plt.savefig(join('output', 'task3_reward.pdf'))
-    plt.show()
-
-    sns.lineplot(x=range(len(dqn.loss)), y=dqn.loss)
-    plt.savefig('output/task3_sum_loss.pdf')
-    plt.savefig(join('output', 'task3_loss.pdf'))
-    plt.show()
+    dqn.plots(sum)
