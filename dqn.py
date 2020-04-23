@@ -47,6 +47,7 @@ class DQN:
         self.input_shape = list(self.settings.process_state(self.env.reset()).shape)
         self.channels = self.input_shape[-1]
         self.input_shape[-1] *= self.settings.frames_as_state
+        self.action_space = self.env.action_space.n
 
         models = natsorted(glob(join('output', name, 'model1_*.h5')))
 
@@ -63,8 +64,8 @@ class DQN:
             self.iteration = int(models[-1].split('_')[-1].split('.')[-2])
 
         else:
-            self.online = settings.build_model(self.input_shape, self.env.action_space.n)
-            self.target = settings.build_model(self.input_shape, self.env.action_space.n)
+            self.online = settings.build_model(self.input_shape, self.action_space)
+            self.target = settings.build_model(self.input_shape, self.action_space)
             self.update_target_model()
 
             self.replay = deque(maxlen=settings.replay_size)
@@ -119,7 +120,7 @@ class DQN:
 
                     # select action with epsilon greedy
                     if npr.random() < self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]:
-                        action = self.env.action_space.sample()
+                        action = npr.randint(self.action_space)
                     else:
                         action = np.argmax(self.online.predict(np.expand_dims(state_c, 0))[0])
 
