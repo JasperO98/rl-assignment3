@@ -50,7 +50,7 @@ class SettingsTask3(SettingsDQN):
     def process_state(state):
         state = cv.cvtColor(state, cv.COLOR_RGB2GRAY)
         state = state[32:-17, 8:-8]
-        state = cv.resize(state, (64, 64), interpolation=cv.INTER_AREA)
+        state = cv.resize(state, (64, 64))
         return np.expand_dims(state, -1)
 
 
