@@ -26,6 +26,7 @@ class SettingsHere(SettingsTask2):
 def test_model(file, games_n, model_name_n):
     model = load_model(file)
     all_rewards = []
+    env = make('MountainCar-v0')
 
     for _ in range(games_n):
         done = False
@@ -70,7 +71,6 @@ def test_parameters():
 
 
 if __name__ == '__main__':
-    env = make('MountainCar-v0')
     n_per_model = 4
     n_tests = 100
     settings = test_parameters()
