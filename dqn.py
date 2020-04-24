@@ -107,13 +107,13 @@ class DQN:
         ax.set(ylabel='Cumulative Reward', xlabel='Game #')
         plt.tight_layout()
         plt.savefig(join('output', self.name, 'reward.pdf'))
-        plt.show()
+        plt.close()
 
         ax = sns.lineplot(x=range(len(self.loss)), y=self.loss)
         ax.set(yscale='log', ylabel='Training Loss', xlabel='Iteration #')
         plt.tight_layout()
         plt.savefig(join('output', self.name, 'loss.pdf'))
-        plt.show()
+        plt.close()
 
     def train(self, render):
         with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:

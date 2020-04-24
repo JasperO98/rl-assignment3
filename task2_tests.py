@@ -10,7 +10,6 @@ from keras.optimizers import Adam
 from os.path import join
 from keras.models import load_model
 from gym import make
-from pickle import dump
 import itertools
 
 
@@ -48,26 +47,32 @@ class SettingsTask2(SettingsDQN):
 def test_model(file, games_n, model_name_n):
     model = load_model(file)
     settings = SettingsTask2()
+    all_rewards = []
+
     input_shape = list(settings.process_state(env.reset()).shape)
-    log_list = []
+    channels = input_shape[-1]
+    input_shape[-1] *= settings.frames_as_state
+
     for _ in range(games_n):
         done = False
-        state = env.reset()
-        state = settings.process_state(state)
-        state = np.tile(state, np.append(np.ones(len(input_shape) - 1, dtype=int), [settings.frames_as_state]))
-        steps_per_game = 0
+        reward_for_game = []
+        state_c = env.reset()
+        state_c = settings.process_state(state_c)
+        state_c = np.tile(state_c, np.append(np.ones(len(input_shape) - 1, dtype=int), [settings.frames_as_state]))
+        persistent = {}
         while not done:
-            action = np.argmax(model.predict(np.expand_dims(state, axis=0))[0])
-            state, reward, done, info = env.step(action)
-            steps_per_game += 1
-            state = settings.process_state(state)
-            state = np.tile(state, np.append(np.ones(len(input_shape) - 1, dtype=int), [settings.frames_as_state]))
-        log_list.append(steps_per_game)
+            action = np.argmax(model.predict(np.expand_dims(state_c, axis=0))[0])
+            state_n, reward, done, info = env.step(action)
+            state_n = settings.process_state(state_n)
+            state_n = np.append(state_c, state_n, axis=-1)[..., channels:]
+            reward_for_game.append(settings.policy(state_c, action, reward, state_n, done, info, persistent))
+            state_c = state_n
+        all_rewards.append(sum(reward_for_game))
         env.close()
     with open("stats_model.txt", "a") as myfile:
-        myfile.write("AVG\t" + model_name_n + "\t" + str(np.mean(log_list)) + "\n")
-        myfile.write("MAX\t" + model_name_n + "\t" + str(np.max(log_list)) + "\n")
-        myfile.write("MIN\t" + model_name_n + "\t" + str(np.min(log_list)) + "\n")
+        myfile.write("AVG\t" + model_name_n + "\t" + str(np.mean(all_rewards)) + "\n")
+        myfile.write("MAX\t" + model_name_n + "\t" + str(np.max(all_rewards)) + "\n")
+        myfile.write("MIN\t" + model_name_n + "\t" + str(np.min(all_rewards)) + "\n")
 
 
 def plots(dqn):
@@ -86,19 +91,21 @@ def plots(dqn):
 
 
 def test_parameters():
-    budget = [8192 << exponent for exponent in range(8)]  # [8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576] #18
+    budget = [8192 << exponent for exponent in range(8)]  # [8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576]
     gamma = [0.99, 0.9]
     alpha = [1, 0.5]
     wuf = [64 << exponent for exponent in range(5)]  # [64, 128, 256, 512, 1024]
     wuf.append(1)
     return list(itertools.product(*[budget, gamma, alpha, wuf]))
 
+
 if __name__ == '__main__':
     env = make('MountainCar-v0')
     n_per_model = 4
     n_tests = 100
     settings = test_parameters()
-    for parameter in settings[0:1]:  # <----------------------------------------------------------------- Voor maar 1 run
+    print(len(settings))
+    for parameter in settings:
         model_name = "_".join([str(x) for x in parameter])
         print(model_name)
         for i in range(n_per_model):
