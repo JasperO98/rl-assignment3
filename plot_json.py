@@ -10,7 +10,7 @@ with open(join('output', 'task3_reward.json')) as f:
 
 sns.lineplot(x=range(len(reward)), y=[sum(x) for x in reward])
 plt.savefig(join('output', 'task3_reward.pdf'))
-plt.show()
+plt.close()
 
 
 print('Loading loss file, this may take a while...')
@@ -20,4 +20,4 @@ with open(join('output', 'task3_loss.json')) as f:
 
 sns.lineplot(x=range(len(loss)), y=loss)
 plt.savefig(join('output', 'task3_loss.pdf'))
-plt.show()
+plt.close()

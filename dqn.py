@@ -39,7 +39,7 @@ class SettingsDQN(ABC):
 
     @staticmethod
     @abstractmethod
-    def policy(state_c, action, reward, state_n, done, info1, info2):
+    def reward(state_c, action, reward, state_n, done, info1, info2):
         pass
 
     @staticmethod
@@ -145,7 +145,7 @@ class DQN:
                     self.env.render() if render else None
                     state_n = self.settings.process_state(state_n)
                     state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
-                    reward = self.settings.policy(state_c, action, reward, state_n, done, info, persistent)
+                    reward = self.settings.reward(state_c, action, reward, state_n, done, info, persistent)
                     self.reward[-1].append(reward)
                     self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
                     state_c = state_n

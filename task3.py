@@ -43,7 +43,7 @@ class SettingsTask3(SettingsDQN):
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info1, info2):
+    def reward(state_c, action, reward, state_n, done, info1, info2):
         return reward
 
     @staticmethod

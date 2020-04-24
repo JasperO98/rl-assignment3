@@ -35,7 +35,7 @@ class SettingsTask2(SettingsDQN):
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info1, info2):
+    def reward(state_c, action, reward, state_n, done, info1, info2):
         info2['best'] = max(info2.get('best', -np.inf), state_c[-2])
         return max(0, state_n[-2] - info2['best'])
 
@@ -65,7 +65,7 @@ def test_model(file, games_n, model_name_n):
             state_n, reward, done, info = env.step(action)
             state_n = settings.process_state(state_n)
             state_n = np.append(state_c, state_n, axis=-1)[..., channels:]
-            reward_for_game.append(settings.policy(state_c, action, reward, state_n, done, info, persistent))
+            reward_for_game.append(settings.reward(state_c, action, reward, state_n, done, info, persistent))
             state_c = state_n
         all_rewards.append(sum(reward_for_game))
         env.close()

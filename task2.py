@@ -32,7 +32,7 @@ class SettingsTask2(SettingsDQN):
         return model
 
     @staticmethod
-    def policy(state_c, action, reward, state_n, done, info1, info2):
+    def reward(state_c, action, reward, state_n, done, info1, info2):
         info2['best'] = max(info2.get('best', -np.inf), state_c[-2])
         return max(0, state_n[-2] - info2['best'])
 
@@ -57,4 +57,4 @@ if __name__ == '__main__':
     sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
     plt.tight_layout()
     plt.savefig(join('output', dqn.name, 'policy.pdf'))
-    plt.show()
+    plt.close()
