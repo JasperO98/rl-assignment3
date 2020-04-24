@@ -59,7 +59,6 @@ def test_model(file, games_n, model_name_n):
             reward_for_game.append(SettingsTask2.reward(state_c, action, reward, state_n, done, info, persistent))
             state_c = state_n
         all_rewards.append(sum(reward_for_game))
-        env.close()
 
     with open('stats_model.txt', 'a') as myfile:
         myfile.write('AVG\t' + model_name_n + '\t' + str(np.mean(all_rewards)) + '\n')
