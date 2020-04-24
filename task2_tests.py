@@ -87,12 +87,11 @@ def plots(dqn):
 
 def test_parameters():
     budget = [8192 << exponent for exponent in range(8)]  # [8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576] #18
-    gamma = [0.99, 0.98]
-    alpha = [0.99, 0.98]
+    gamma = [0.99, 0.9]
+    alpha = [1, 0.5]
     wuf = [64 << exponent for exponent in range(5)]  # [64, 128, 256, 512, 1024]
     wuf.append(1)
     return list(itertools.product(*[budget, gamma, alpha, wuf]))
-
 
 if __name__ == '__main__':
     env = make('MountainCar-v0')
