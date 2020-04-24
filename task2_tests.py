@@ -1,20 +1,18 @@
-from dqn import DQN, SettingsDQN
+from dqn import DQN
 import pandas as pd
 from itertools import product
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
 from os.path import join
 from keras.models import load_model
 from gym import make
 import itertools
+from task2 import SettingsTask2
 
 
-class SettingsTask2(SettingsDQN):
-    def __init__(self, budget=20000, gamma=0.99, alpha=0.99, weight_update_frequency=128):
+class SettingsHere(SettingsTask2):
+    def __init__(self, budget, gamma, alpha, weight_update_frequency):
         self.budget = budget
         self.batch_size = 32
         self.gamma = gamma
@@ -23,25 +21,6 @@ class SettingsTask2(SettingsDQN):
         self.weight_update_frequency = weight_update_frequency
         self.frames_as_state = 1
         self.replay_size = int(self.budget / 10)
-
-    @staticmethod
-    def build_model(input_shape, action_space):
-        model = Sequential()
-
-        model.add(Dense(units=64, activation='relu', input_shape=input_shape))
-        model.add(Dense(units=action_space, activation='linear'))
-
-        model.compile(optimizer=Adam(), loss='mse')
-        return model
-
-    @staticmethod
-    def reward(state_c, action, reward, state_n, done, info1, info2):
-        info2['best'] = max(info2.get('best', -np.inf), state_c[-2])
-        return max(0, state_n[-2] - info2['best'])
-
-    @staticmethod
-    def process_state(state):
-        return state
 
 
 def test_model(file, games_n, model_name_n):
@@ -56,7 +35,7 @@ def test_model(file, games_n, model_name_n):
         while not done:
             action = np.argmax(model.predict(np.expand_dims(state_c, axis=0))[0])
             state_n, reward, done, info = env.step(action)
-            reward_for_game.append(SettingsTask2.reward(state_c, action, reward, state_n, done, info, persistent))
+            reward_for_game.append(SettingsHere.reward(state_c, action, reward, state_n, done, info, persistent))
             state_c = state_n
         all_rewards.append(sum(reward_for_game))
 
@@ -102,10 +81,12 @@ if __name__ == '__main__':
         for i in range(n_per_model):
             model_name_n = model_name + '_V' + str(i + 1)
             model_place = join('output', model_name_n, 'model1_' + str(parameter[0]) + '.h5')
-            dqn = DQN('MountainCar-v0', model_name_n, SettingsTask2(parameter[0],
-                                                                    parameter[1],
-                                                                    parameter[2],
-                                                                    parameter[3]))
+            dqn = DQN('MountainCar-v0', model_name_n, SettingsHere(
+                parameter[0],
+                parameter[1],
+                parameter[2],
+                parameter[3],
+            ))
             dqn.train(False)
             dqn.plots(sum)
             test_model(model_place, n_tests, model_name_n)
