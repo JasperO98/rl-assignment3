@@ -46,33 +46,25 @@ class SettingsTask2(SettingsDQN):
 
 def test_model(file, games_n, model_name_n):
     model = load_model(file)
-    settings = SettingsTask2()
     all_rewards = []
-
-    input_shape = list(settings.process_state(env.reset()).shape)
-    channels = input_shape[-1]
-    input_shape[-1] *= settings.frames_as_state
 
     for _ in range(games_n):
         done = False
         reward_for_game = []
         state_c = env.reset()
-        state_c = settings.process_state(state_c)
-        state_c = np.tile(state_c, np.append(np.ones(len(input_shape) - 1, dtype=int), [settings.frames_as_state]))
         persistent = {}
         while not done:
             action = np.argmax(model.predict(np.expand_dims(state_c, axis=0))[0])
             state_n, reward, done, info = env.step(action)
-            state_n = settings.process_state(state_n)
-            state_n = np.append(state_c, state_n, axis=-1)[..., channels:]
-            reward_for_game.append(settings.reward(state_c, action, reward, state_n, done, info, persistent))
+            reward_for_game.append(SettingsTask2.reward(state_c, action, reward, state_n, done, info, persistent))
             state_c = state_n
         all_rewards.append(sum(reward_for_game))
         env.close()
-    with open("stats_model.txt", "a") as myfile:
-        myfile.write("AVG\t" + model_name_n + "\t" + str(np.mean(all_rewards)) + "\n")
-        myfile.write("MAX\t" + model_name_n + "\t" + str(np.max(all_rewards)) + "\n")
-        myfile.write("MIN\t" + model_name_n + "\t" + str(np.min(all_rewards)) + "\n")
+
+    with open('stats_model.txt', 'a') as myfile:
+        myfile.write('AVG\t' + model_name_n + '\t' + str(np.mean(all_rewards)) + '\n')
+        myfile.write('MAX\t' + model_name_n + '\t' + str(np.max(all_rewards)) + '\n')
+        myfile.write('MIN\t' + model_name_n + '\t' + str(np.min(all_rewards)) + '\n')
 
 
 def plots(dqn):
@@ -106,10 +98,10 @@ if __name__ == '__main__':
     settings = test_parameters()
     print(len(settings))
     for parameter in settings:
-        model_name = "_".join([str(x) for x in parameter])
+        model_name = '_'.join([str(x) for x in parameter])
         print(model_name)
         for i in range(n_per_model):
-            model_name_n = model_name + "_V" + str(i + 1)
+            model_name_n = model_name + '_V' + str(i + 1)
             model_place = join('output', model_name_n, 'model1_' + str(parameter[0]) + '.h5')
             dqn = DQN('MountainCar-v0', model_name_n, SettingsTask2(parameter[0],
                                                                     parameter[1],
