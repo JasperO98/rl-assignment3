@@ -55,5 +55,6 @@ if __name__ == '__main__':
     df['Action'] = df['Action'].astype('category')
 
     sns.scatterplot(data=df, x='Position', y='Velocity', hue='Action')
+    plt.tight_layout()
     plt.savefig(join('output', dqn.name, 'policy.pdf'))
     plt.show()

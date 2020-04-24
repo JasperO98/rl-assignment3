@@ -93,11 +93,15 @@ class DQN:
     def plots(self, reduce):
         makedirs(join('output', self.name), exist_ok=True)
 
-        sns.lineplot(x=range(len(self.reward)), y=[reduce(x) for x in self.reward])
+        ax = sns.lineplot(x=range(len(self.reward)), y=[reduce(x) for x in self.reward])
+        ax.set(ylabel='Cumulative Reward', xlabel='Game #')
+        plt.tight_layout()
         plt.savefig(join('output', self.name, 'reward.pdf'))
         plt.show()
 
-        sns.lineplot(x=range(len(self.loss)), y=self.loss)
+        ax = sns.lineplot(x=range(len(self.loss)), y=self.loss)
+        ax.set(yscale='log', ylabel='Training Loss', xlabel='Iteration #')
+        plt.tight_layout()
         plt.savefig(join('output', self.name, 'loss.pdf'))
         plt.show()
 
