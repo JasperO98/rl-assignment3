@@ -11,15 +11,23 @@ from glob import glob
 from natsort import natsorted
 from keras.models import load_model
 import pickle
-from os import makedirs
+from os import makedirs, environ
 import seaborn as sns
 import matplotlib.pyplot as plt
 from itertools import count
+from random import seed
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.compat.v1.Session(config=config)
+
+# set random generator seeds
+SEED = 678934502
+environ['PYTHONHASHSEED'] = str(SEED)
+seed(SEED)
+npr.seed(SEED)
+tf.random.set_seed(SEED)
 
 
 class SettingsDQN(ABC):
@@ -44,6 +52,7 @@ class DQN:
         self.name = name
         self.settings = settings
         self.env = gym.make(game)
+        self.env.seed(SEED)
 
         self.input_shape = list(self.settings.process_state(self.env.reset()).shape)
         self.channels = self.input_shape[-1]
