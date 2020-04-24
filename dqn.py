@@ -16,6 +16,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from itertools import count
 from random import seed
+from scipy.special import softmax
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -133,7 +134,8 @@ class DQN:
                     self.iteration += 1
 
                     # select action with epsilon greedy
-                    if npr.random() < self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]:
+                    epsilon = self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]
+                    if npr.random() < epsilon:
                         action = npr.randint(self.action_space)
                     else:
                         action = np.argmax(self.online.predict(np.expand_dims(state_c, 0))[0])
@@ -149,7 +151,10 @@ class DQN:
                     state_c = state_n
 
                     # select and process batch of samples
-                    samples = npr.choice(self.replay, self.settings.batch_size)
+                    samples = npr.choice(a=self.replay, size=self.settings.batch_size, p=(
+                            (1 - epsilon) * softmax([item['rewardN'] for item in self.replay])
+                            + epsilon * softmax([int(item['doneN']) for item in self.replay])
+                    ))
                     samples_state_c = np.array([sample['stateC'] for sample in samples])
                     samples_state_n = np.array([sample['stateN'] for sample in samples])
                     samples_reward = np.array([sample['rewardN'] for sample in samples])
