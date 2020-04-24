@@ -14,6 +14,7 @@ import pickle
 from os import makedirs
 import seaborn as sns
 import matplotlib.pyplot as plt
+from itertools import count
 
 # limit GPU memory usage
 config = tf.compat.v1.ConfigProto()
@@ -104,7 +105,7 @@ class DQN:
         with tqdm(total=self.settings.budget, desc='Waiting ...', initial=self.iteration) as progress:
             if self.iteration >= self.settings.budget:
                 return
-            while True:
+            for i in count(1):
                 self.reward.append([])
                 persistent = {}
 
@@ -166,4 +167,5 @@ class DQN:
                         self.reward.pop()
                         self.save()
                         return
-                self.save()
+                if i % 10 == 0:
+                    self.save()
