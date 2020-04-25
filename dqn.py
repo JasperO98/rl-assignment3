@@ -48,6 +48,39 @@ class SettingsDQN(ABC):
         pass
 
 
+class ReplayBuffer:
+    def __init__(self, maxlen, input_shape):
+        input_shape = [maxlen] + input_shape
+
+        self.state_c = np.empty(input_shape, dtype=float)
+        self.action_c = np.empty(maxlen, dtype=int)
+        self.reward_n = np.empty(maxlen, dtype=float)
+        self.state_n = np.empty(input_shape, dtype=float)
+        self.done_n = np.empty(maxlen, dtype=bool)
+
+        self.maxlen = maxlen
+        self.appends = 0
+
+    def append(self, state_c, action_c, reward_n, state_n, done_n):
+        self.state_c[self.appends % self.maxlen] = state_c
+        self.action_c[self.appends % self.maxlen] = action_c
+        self.reward_n[self.appends % self.maxlen] = reward_n
+        self.state_n[self.appends % self.maxlen] = state_n
+        self.done_n[self.appends % self.maxlen] = done_n
+
+        self.appends += 1
+
+    def sample(self, size):
+        length = min(self.appends, self.maxlen)
+        size = min(size, length)
+
+        indices = npr.choice(
+            length, size, False,
+            0.5 * softmax(self.reward_n[:length].astype(float)) + 0.5 * softmax(self.done_n[:length].astype(float)),
+        )
+        return self.state_c[indices], self.action_c[indices], self.reward_n[indices], self.state_n[indices], self.done_n[indices]
+
+
 class DQN:
     def __init__(self, game, name, settings):
         self.name = name
@@ -79,7 +112,7 @@ class DQN:
             self.target = settings.build_model(self.input_shape, self.action_space)
             self.update_target_model()
 
-            self.replay = deque(maxlen=settings.replay_size)
+            self.replay = ReplayBuffer(settings.replay_size, self.input_shape)
             self.loss = []
             self.reward = []
             self.iteration = 0
@@ -147,19 +180,11 @@ class DQN:
                     state_n = np.append(state_c, state_n, axis=-1)[..., self.channels:]
                     reward = self.settings.reward(state_c, action, reward, state_n, done, info, persistent)
                     self.reward[-1].append(reward)
-                    self.replay.append({'stateC': state_c, 'actionC': action, 'rewardN': reward, 'stateN': state_n, 'doneN': done})
+                    self.replay.append(state_c, action, reward, state_n, done)
                     state_c = state_n
 
                     # select and process batch of samples
-                    samples = npr.choice(a=self.replay, size=self.settings.batch_size, p=(
-                            (1 - epsilon) * softmax([item['rewardN'] for item in self.replay])
-                            + epsilon * softmax([int(item['doneN']) for item in self.replay])
-                    ))
-                    samples_state_c = np.array([sample['stateC'] for sample in samples])
-                    samples_state_n = np.array([sample['stateN'] for sample in samples])
-                    samples_reward = np.array([sample['rewardN'] for sample in samples])
-                    samples_action = np.array([sample['actionC'] for sample in samples])
-                    samples_done = np.array([sample['doneN'] for sample in samples])
+                    samples_state_c, samples_action, samples_reward, samples_state_n, samples_done = self.replay.sample(self.settings.batch_size)
 
                     # calculate and apply training targets for batch
                     target = self.online.predict(samples_state_c)
