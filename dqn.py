@@ -56,7 +56,7 @@ class ReplayBuffer:
         self.action_c = np.empty(maxlen, dtype=int)
         self.reward_n = np.empty(maxlen, dtype=float)
         self.state_n = np.empty(input_shape, dtype=float)
-        self.done_n = np.empty(maxlen, dtype=bool)
+        self.done_n = np.empty(maxlen, dtype=int)
 
         self.maxlen = maxlen
         self.appends = 0
@@ -76,7 +76,7 @@ class ReplayBuffer:
 
         indices = npr.choice(
             length, size, False,
-            0.5 * softmax(self.reward_n[:length].astype(float)) + 0.5 * softmax(self.done_n[:length].astype(float)),
+            0.5 * softmax(self.reward_n[:length]) + 0.5 * softmax(self.done_n[:length]),
         )
         return self.state_c[indices], self.action_c[indices], self.reward_n[indices], self.state_n[indices], self.done_n[indices]
 
@@ -190,7 +190,7 @@ class DQN:
                     target = self.online.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.settings.alpha
                     target[range(len(target)), samples_action] += self.settings.alpha * (
-                            samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * ~samples_done
+                            samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * (1 - samples_done)
                     )
                     loss = self.online.fit(
                         x=samples_state_c, y=target, batch_size=self.settings.batch_size, epochs=1, verbose=0,
