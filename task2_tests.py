@@ -9,7 +9,7 @@ from keras.models import load_model
 from gym import make
 import itertools
 from task2 import SettingsTask2
-
+import os.path
 
 class SettingsHere(SettingsTask2):
     def __init__(self, budget, gamma, alpha, weight_update_frequency):
@@ -70,24 +70,37 @@ def test_parameters():
     return list(itertools.product(*[budget, gamma, alpha, wuf]))
 
 
+
+
 if __name__ == '__main__':
-    n_per_model = 4
+    n_per_model = 1
     n_tests = 100
     settings = test_parameters()
     print(len(settings))
     for parameter in settings:
         model_name = '_'.join([str(x) for x in parameter])
-        print(model_name)
-        for i in range(n_per_model):
-            model_name_n = model_name + '_V' + str(i + 1)
-            model_place = join('output', model_name_n, 'model1_' + str(parameter[0]) + '.h5')
-            dqn = DQN('MountainCar-v0', model_name_n, SettingsHere(
-                parameter[0],
-                parameter[1],
-                parameter[2],
-                parameter[3],
-            ))
-            dqn.train(False)
-            dqn.plots(sum)
-            test_model(model_place, n_tests, model_name_n)
-            plots(dqn)
+#--------------------------------------------------------------------------------------------------------------------
+        try:
+            for i in range(n_per_model):
+                model_name_n = model_name + '_V' + str("1")
+#====================================================================================================================
+                if os.path.isdir(join('output', model_name_n)) == False:
+                    model_place = join('output', model_name_n, 'model1_' + str(parameter[0]) + '.h5')
+                    dqn = DQN('MountainCar-v0', model_name_n, SettingsHere(
+                        parameter[0],
+                        parameter[1],
+                        parameter[2],
+                        parameter[3],
+                    ))
+                    dqn.train(False)
+                    dqn.plots(sum)
+                    test_model(model_place, n_tests, model_name_n)
+                    plots(dqn)
+                else:
+                    with open('log.txt', 'a') as myfile:
+                        myfile.write(model_name_n + " already exists" + '\n')
+# ====================================================================================================================
+        except PermissionError:
+            with open('error_log.txt', 'a') as myfile:
+                myfile.write(model_name_n + "\tPermission Error" + '\n')
+#--------------------------------------------------------------------------------------------------------------------
