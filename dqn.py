@@ -2,7 +2,6 @@ import gym
 import numpy as np
 import numpy.random as npr
 from tqdm import tqdm
-from collections import deque
 import tensorflow as tf
 from abc import ABC, abstractmethod
 import json
@@ -19,9 +18,8 @@ from random import seed
 from scipy.special import softmax
 
 # limit GPU memory usage
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
+for device in tf.config.experimental.list_physical_devices('GPU'):
+    tf.config.experimental.set_memory_growth(device, True)
 
 # set random generator seeds
 SEED = 678934502
