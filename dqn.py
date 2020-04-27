@@ -74,6 +74,15 @@ class ReplayBuffer:
         indices = npr.choice(length, size, False, softmax(self.reward_n[:length]))
         return self.state_c[indices], self.action_c[indices], self.reward_n[indices], self.state_n[indices], self.done_n[indices]
 
+    def save(self, name):
+        with open(join('output', name, 'replay.pkl'), 'wb') as fp:
+            pickle.dump(self, fp)
+
+    @staticmethod
+    def load(name):
+        with open(join('output', name, 'replay.pkl'), 'rb') as fp:
+            return pickle.load(fp)
+
 
 class DQN:
     def __init__(self, game, name, settings):
@@ -92,9 +101,8 @@ class DQN:
         if len(models) > 0:
             self.online = load_model(models[-1])
             self.target = load_model(join('output', name, 'model2.h5'))
+            self.replay = ReplayBuffer.load(self.name)
 
-            with open(join('output', name, 'replay.pkl'), 'rb') as fp:
-                self.replay = pickle.load(fp)
             with open(join('output', name, 'loss.json'), 'r') as fp:
                 self.loss = json.load(fp)
             with open(join('output', name, 'reward.json'), 'r') as fp:
@@ -119,9 +127,8 @@ class DQN:
 
         self.online.save(join('output', self.name, 'model1_' + str(self.iteration) + '.h5'))
         self.target.save(join('output', self.name, 'model2.h5'))
+        self.replay.save(self.name)
 
-        with open(join('output', self.name, 'replay.pkl'), 'wb') as fp:
-            pickle.dump(self.replay, fp)
         with open(join('output', self.name, 'loss.json'), 'w') as fp:
             json.dump(self.loss, fp)
         with open(join('output', self.name, 'reward.json'), 'w') as fp:
