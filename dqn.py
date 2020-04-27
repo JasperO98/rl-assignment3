@@ -203,5 +203,5 @@ class DQN:
                         self.reward.pop()
                         self.save()
                         return
-                if i % 10 == 0:
+                if i % 100 == 0:
                     self.save()
