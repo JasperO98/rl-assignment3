@@ -17,7 +17,7 @@ class SettingsTask2(SettingsDQN):
         self.gamma = 0.99
         self.alpha = 0.99
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
-        self.weight_update_frequency = 128
+        self.weight_update_frequency = 256
         self.frames_as_state = 1
         self.replay_size = int(self.budget / 10)
 
