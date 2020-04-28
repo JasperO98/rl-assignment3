@@ -2,7 +2,6 @@ import gym
 import numpy as np
 import numpy.random as npr
 from tqdm import tqdm
-from collections import deque
 import tensorflow as tf
 from abc import ABC, abstractmethod
 import json
@@ -10,7 +9,6 @@ from os.path import join
 from glob import glob
 from natsort import natsorted
 from keras.models import load_model
-import pickle
 from os import makedirs, environ
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -19,9 +17,8 @@ from random import seed
 from scipy.special import softmax
 
 # limit GPU memory usage
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
+for device in tf.config.experimental.list_physical_devices('GPU'):
+    tf.config.experimental.set_memory_growth(device, True)
 
 # set random generator seeds
 SEED = 678934502
@@ -52,11 +49,11 @@ class ReplayBuffer:
     def __init__(self, maxlen, input_shape):
         input_shape = [maxlen] + input_shape
 
-        self.state_c = np.empty(input_shape, dtype=float)
-        self.action_c = np.empty(maxlen, dtype=int)
-        self.reward_n = np.empty(maxlen, dtype=float)
-        self.state_n = np.empty(input_shape, dtype=float)
-        self.done_n = np.empty(maxlen, dtype=int)
+        self.state_c = np.zeros(input_shape, dtype=np.float32)
+        self.action_c = np.zeros(maxlen, dtype=np.uint8)
+        self.reward_n = np.zeros(maxlen, dtype=np.float32)
+        self.state_n = np.zeros(input_shape, dtype=np.float32)
+        self.done_n = np.zeros(maxlen, dtype=np.bool)
 
         self.maxlen = maxlen
         self.appends = 0
@@ -73,12 +70,35 @@ class ReplayBuffer:
     def sample(self, size):
         length = min(self.appends, self.maxlen)
         size = min(size, length)
-
-        indices = npr.choice(
-            length, size, False,
-            0.5 * softmax(self.reward_n[:length]) + 0.5 * softmax(self.done_n[:length]),
-        )
+        indices = npr.choice(length, size, False, softmax(self.reward_n[:length]))
         return self.state_c[indices], self.action_c[indices], self.reward_n[indices], self.state_n[indices], self.done_n[indices]
+
+    def save(self, name):
+        np.savez(
+            join('output', name, 'replay.npz'),
+            state_c=self.state_c,
+            action_c=self.action_c,
+            reward_n=self.reward_n,
+            state_n=self.state_n,
+            done_n=self.done_n,
+            maxlen=self.maxlen,
+            appends=self.appends,
+        )
+
+    @staticmethod
+    def load(name):
+        replay = ReplayBuffer(0, [0])
+        file = np.load(join('output', name, 'replay.npz'))
+
+        replay.state_c = file['state_c']
+        replay.action_c = file['action_c']
+        replay.reward_n = file['reward_n']
+        replay.state_n = file['state_n']
+        replay.done_n = file['done_n']
+        replay.maxlen = file['maxlen']
+        replay.appends = file['appends']
+
+        return replay
 
 
 class DQN:
@@ -98,9 +118,8 @@ class DQN:
         if len(models) > 0:
             self.online = load_model(models[-1])
             self.target = load_model(join('output', name, 'model2.h5'))
+            self.replay = ReplayBuffer.load(self.name)
 
-            with open(join('output', name, 'replay.pkl'), 'rb') as fp:
-                self.replay = pickle.load(fp)
             with open(join('output', name, 'loss.json'), 'r') as fp:
                 self.loss = json.load(fp)
             with open(join('output', name, 'reward.json'), 'r') as fp:
@@ -125,9 +144,8 @@ class DQN:
 
         self.online.save(join('output', self.name, 'model1_' + str(self.iteration) + '.h5'))
         self.target.save(join('output', self.name, 'model2.h5'))
+        self.replay.save(self.name)
 
-        with open(join('output', self.name, 'replay.pkl'), 'wb') as fp:
-            pickle.dump(self.replay, fp)
         with open(join('output', self.name, 'loss.json'), 'w') as fp:
             json.dump(self.loss, fp)
         with open(join('output', self.name, 'reward.json'), 'w') as fp:
@@ -167,8 +185,7 @@ class DQN:
                     self.iteration += 1
 
                     # select action with epsilon greedy
-                    epsilon = self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]
-                    if npr.random() < epsilon:
+                    if npr.random() < self.settings.epsilon[min(self.iteration, len(self.settings.epsilon)) - 1]:
                         action = npr.randint(self.action_space)
                     else:
                         action = np.argmax(self.online.predict(np.expand_dims(state_c, 0))[0])
@@ -190,7 +207,7 @@ class DQN:
                     target = self.online.predict(samples_state_c)
                     target[range(len(target)), samples_action] *= 1 - self.settings.alpha
                     target[range(len(target)), samples_action] += self.settings.alpha * (
-                            samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * (1 - samples_done)
+                            samples_reward + self.settings.gamma * np.max(self.target.predict(samples_state_n), axis=1) * ~samples_done
                     )
                     loss = self.online.fit(
                         x=samples_state_c, y=target, batch_size=self.settings.batch_size, epochs=1, verbose=0,
@@ -210,5 +227,5 @@ class DQN:
                         self.reward.pop()
                         self.save()
                         return
-                if i % 10 == 0:
+                if i % 100 == 0:
                     self.save()
