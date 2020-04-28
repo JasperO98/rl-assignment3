@@ -12,13 +12,13 @@ from task2 import SettingsTask2
 import os.path
 
 class SettingsHere(SettingsTask2):
-    def __init__(self, budget, gamma, alpha, weight_update_frequency):
+    def __init__(self, budget, gamma, alpha, weight_update_interval):
         self.budget = budget
         self.batch_size = 32
         self.gamma = gamma
         self.alpha = alpha
         self.epsilon = np.linspace(1, 0.01, int(self.budget / 10))
-        self.weight_update_frequency = weight_update_frequency
+        self.weight_update_interval = weight_update_interval
         self.frames_as_state = 1
         self.replay_size = int(self.budget / 10)
 

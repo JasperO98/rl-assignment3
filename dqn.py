@@ -215,7 +215,7 @@ class DQN:
                     self.loss.append(loss)
 
                     # apply infrequent weight updates
-                    if self.iteration % self.settings.weight_update_frequency == 0:
+                    if self.iteration % self.settings.weight_update_interval == 0:
                         self.update_target_model()
 
                     # end iteration
