@@ -9,7 +9,6 @@ from os.path import join
 from glob import glob
 from natsort import natsorted
 from keras.models import load_model
-import pickle
 from os import makedirs, environ
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -75,13 +74,31 @@ class ReplayBuffer:
         return self.state_c[indices], self.action_c[indices], self.reward_n[indices], self.state_n[indices], self.done_n[indices]
 
     def save(self, name):
-        with open(join('output', name, 'replay.pkl'), 'wb') as fp:
-            pickle.dump(self, fp)
+        np.savez(
+            join('output', name, 'replay.npz'),
+            state_c=self.state_c,
+            action_c=self.action_c,
+            reward_n=self.reward_n,
+            state_n=self.state_n,
+            done_n=self.done_n,
+            maxlen=self.maxlen,
+            appends=self.appends,
+        )
 
     @staticmethod
     def load(name):
-        with open(join('output', name, 'replay.pkl'), 'rb') as fp:
-            return pickle.load(fp)
+        replay = ReplayBuffer(0, [0])
+        file = np.load(join('output', name, 'replay.npz'))
+
+        replay.state_c = file['state_c']
+        replay.action_c = file['action_c']
+        replay.reward_n = file['reward_n']
+        replay.state_n = file['state_n']
+        replay.done_n = file['done_n']
+        replay.maxlen = file['maxlen']
+        replay.appends = file['appends']
+
+        return replay
 
 
 class DQN:
